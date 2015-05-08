@@ -1,0 +1,27 @@
+# iDataBrowser Cassandra Schema v0.1
+//CREATE KEYSPACE idb WITH replication = {
+//  'class': 'SimpleStrategy',
+//  'replication_factor': '1'
+//};
+//
+//USE idb;
+
+DROP TABLE IF EXISTS documents;
+CREATE TABLE IF NOT EXISTS documents(
+	doc_id 			uuid,
+	doc_title 		text,
+	doc_text		text,
+	doc_expire		timestamp,
+	doc_type		text,
+	doc_create_time	timestamp,
+	doc_view_count	int,
+	PRIMARY KEY ((doc_title, doc_id), doc_create_time))WITH CLUSTERING ORDER BY (doc_create_time DESC);
+
+DROP INDEX IF EXISTS doc_text_index;
+CREATE INDEX doc_text_index ON documents(doc_text);
+DROP INDEX IF EXISTS doc_type_index;
+CREATE INDEX doc_type_index ON documents(doc_type);
+DROP INDEX IF EXISTS doc_expire_index;
+CREATE INDEX doc_expire_index ON documents(doc_expire);
+DROP INDEX IF EXISTS doc_view_count_index;
+CREATE INDEX doc_view_count_index ON documents(doc_view_count);
