@@ -1,0 +1,23 @@
+{
+  "name": "your-app-backend",
+  "description": "",
+  "version": "0.0.2",
+  "main": "app.js",
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*",
+    "supertest": "0.13.0"
+  },
+  "scripts": {
+    "test": "mocha --no-colors --reporter spec",
+    "start": "node --debug ./bin/www"
+  },
+  "dependencies": {
+    "cassandra-driver": "^2.0.1",
+    "debug": "^0.8.1",
+    "express": "^4.12.3",
+    "moment": "^2.10.2",
+    "path": "^0.11.14",
+    "underscore": "*"
+  }
+}
