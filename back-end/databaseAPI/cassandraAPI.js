@@ -31,13 +31,13 @@ Output:
 	"payload": null
 }
 */
-function addDocWithRawData(req, res){
+function addDocWithRawData(data, callback){
 	var input = {};
 
 	// get raw data
 	for (var index in columns){
 		var key = columns[index];
-		var value = req.body[key];
+		var value = data[key];
 		input[key] = value;
 	}
 
@@ -52,26 +52,23 @@ function addDocWithRawData(req, res){
 
 	// prepare to input
 	// assume most of data is in correct type now
+	// assume expire from input is formated as timestamp
 	input['doc_id'] = cassandra.types.uuid();
 	input['doc_create_time'] = moment().valueOf();
 	input['doc_view_count'] = 0;
-	input['doc_type'] = validateData(!input['doc_type'])? input['doc_type'] : 'post';
-
-	// assume expire from input is formated as 2015-05-07T20:07:00-05:00
-	// more details: http://momentjs.com/
-	input['doc_expire'] = parseInt(input['doc_expire']);
-
+	input['doc_type'] = validateData(input['doc_type'])? input['doc_type'] : 'post';
+	input['doc_expire'] = validateData(input['doc_expire'])? moment(input['doc_expire']).valueOf() : null;
+	
     var query = 'INSERT INTO documents(doc_type, doc_title, doc_create_time, doc_id, doc_text, doc_expire)  VALUES (?, ?, ?, ?, ?, ?)';
     var params = [];
     for (var key in columns){
         params.push(input[columns[key]]);
     }
-    console.log(params);
     execute(query, params, function(error, result) {
         if (error)
-            res.send(new AXResponse(false, error.message));
+        	callback(false, error.message);
         else    
-            res.send(new AXResponse(true, result));
+        	callback(true, result);
     });
 }
 
@@ -86,13 +83,13 @@ Output:
 true/false with result
 */
 // find a record
-function findDocWithTitleAndTime(req, callback){
+function findDocWithTitleAndTime(data, callback){
 	var input = {};
 
 	// get raw data
 	for (var index in columns){
 		var key = columns[index];
-		var value = req.body[key];
+		var value = data[key];
 		input[key] = value;
 	}
 
@@ -105,7 +102,7 @@ function findDocWithTitleAndTime(req, callback){
 		}
 	}
 
-	input['doc_create_time'] = parseInt(input['doc_create_time']);
+	input['doc_create_time'] = moment(data.doc_create_time).valueOf();
 	// if (typeof(input['doc_create_time']) == 'string'){
 	// 	input['doc_create_time'] = moment(input['doc_create_time']).valueOf();
 	// }
@@ -115,10 +112,8 @@ function findDocWithTitleAndTime(req, callback){
 
     execute(query, params, function(error, result) {
         if (error)
-            // res.send(new AXResponse(error.message, result));
         	callback(false, error.message);
         else    
-            // res.send(new AXResponse(true, result.rows));
         	callback(true, result.rows);
     });
 }
@@ -134,10 +129,10 @@ doc_create_time
 Output:
 true/false
 */
-function updateDocWithRawData(req, res){
-	findDocWithTitleAndTime(req, function(success, results){
+function updateDocWithRawData(data, callback){
+	findDocWithTitleAndTime(data, function(success, results){
 		if (!success || validateData(!results[0])){
-			res.send(new AXResponse(false, ERROR_NO_DATA));
+			callback(false, ERROR_NO_DATA);
 			return;
 		}
 
@@ -146,13 +141,14 @@ function updateDocWithRawData(req, res){
 		var input = {};
 		for (var index in columns){
 			var key = columns[index];
-			var value = req.body[key];
+			var value = data[key];
 			input[key] = value;
 		}
 
 	    input['doc_id'] = doc['doc_id'];
-		input['doc_create_time'] = parseInt(input['doc_create_time']);
-		input['doc_type'] = validateData(!input['doc_type'])? input['doc_type'] : 'post';
+		input['doc_create_time'] = moment(data.doc_create_time).valueOf();
+		input['doc_type'] = validateData(input['doc_type'])? input['doc_type'] : 'post';
+		input['doc_expire'] = validateData(input['doc_expire'])? moment(input['doc_expire']).valueOf() : null;
 
     	var query = 'INSERT INTO documents(doc_type, doc_title, doc_create_time, doc_id, doc_text, doc_expire)  VALUES (?, ?, ?, ?, ?, ?)';
 	    var params = [];
@@ -162,9 +158,9 @@ function updateDocWithRawData(req, res){
 
 	    execute(query, params, function(error, result) {
 	        if (error)
-	            res.send(new AXResponse(error.message, result));
+	            callback(error.message, result);
 	        else    
-	            res.send(new AXResponse(true, result.rows));
+	            callback(true, result.rows);
 	    });
 	})	
 }
@@ -176,15 +172,15 @@ N/A
 Output:
 All rows
 */
-function findAll(req, res){
+function findAll(callback){
 	var query = 'SELECT * FROM documents';
     var params = [];
 
     execute(query, params, function(error, result) {
         if (error)
-            res.send(new AXResponse(error.message, result));
+        	callback(false, error.message);
         else    
-            res.send(new AXResponse(true, result.rows));
+        	callback(true, result.rows);
     });
 }
 
@@ -199,13 +195,13 @@ Output:
 rows of data
 */
 // find a record
-function basicSearch(req, res){
+function basicSearch(data, callback){
 	var input = {};
 
 	// get raw data
 	for (var index in columns){
 		var key = columns[index];
-		var value = req.body[key];
+		var value = data[key];
 		if (validateData(value))
 			input[key] = value;
 	}
@@ -224,9 +220,9 @@ function basicSearch(req, res){
 	query = query + ' ALLOW FILTERING';
     execute(query, params, function(error, result) {
         if (error)
-            res.send(new AXResponse(error.message, result));
+            callback(false, error.message);
         else    
-            res.send(new AXResponse(true, result.rows));
+            callback(true, result.rows);
     });
 }
 

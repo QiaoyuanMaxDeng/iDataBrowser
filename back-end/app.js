@@ -2,7 +2,7 @@
 var express = require('express');
 var app = module.exports = express();
 var bodyParser = require('body-parser')
-var dataRouter = require('./routes/dataRouter');
+var browserRouter = require('./routes/browserRouter');
 var router = express.Router();
 var path = require('path');
 
@@ -26,8 +26,9 @@ var enableCORS = function(req, res, next) {
     }
 };
 
+app.use('/public', express.static(path.join(__dirname, '/back-end/public')));
 app.use(enableCORS);
-app.use('/',dataRouter);
+app.use('/',browserRouter);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
